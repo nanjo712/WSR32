@@ -53,7 +53,7 @@ endif()
 
 # if the generated Verilog files are outdated, re-run the Elaborate command
 if (${ELABORATE_OUTDATED})
-    message(STATUS "Re-running Elaborate command")
+    message(STATUS "Running Elaborate command")
     execute_process(
         COMMAND mkdir -p ${VERILOG_SRC_DIR}
         COMMAND mill ${MILL_VERSION} -i ${PROJECT_NAME}.runMain Elaborate ${FIRRTL_ARG}
@@ -61,13 +61,16 @@ if (${ELABORATE_OUTDATED})
     )
 endif()
 
-# check if the command mill is available
-add_custom_target(elaborate
+add_custom_command(
+    OUTPUT ${VERILOG_SRC_LIST}
     COMMAND mkdir -p ${VERILOG_SRC_DIR}
     COMMAND mill ${MILL_VERSION} -i ${PROJECT_NAME}.runMain Elaborate ${FIRRTL_ARG}
+    DEPENDS ${ELABORATE_SOURCE} ${CHISEL_SOURCE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    SOURCES ${CHISEL_SOURCE} ${ELABORATE_SOURCE}
-    COMMENT "Elaborating Chisel sources"
+)
+
+add_custom_target(elaborate
+    DEPENDS ${VERILOG_SRC_LIST}
 )
 
 foreach(FILE ${CHISEL_SOURCE})
