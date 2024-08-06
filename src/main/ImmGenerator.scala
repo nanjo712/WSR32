@@ -1,8 +1,9 @@
 package WSR32
 
 import chisel3._
+import chisel3.util._
 
-class ImmGenerator {
+class ImmGenerator extends Module {
     val io = IO(new Bundle {
         val instruction = Input(UInt(32.W))
         val immI        = Output(UInt(32.W))
@@ -12,9 +13,9 @@ class ImmGenerator {
         val immJ        = Output(UInt(32.W))
     })
 
-    io.immI = Cat(Fill(20, io.instruction(31)), io.instruction(31, 20))
-    io.immS = Cat(Fill(20, io.instruction(31)), io.instruction(31, 25), io.instruction(11, 7))
-    io.immB = Cat(
+    io.immI := Cat(Fill(20, io.instruction(31)), io.instruction(31, 20))
+    io.immS := Cat(Fill(20, io.instruction(31)), io.instruction(31, 25), io.instruction(11, 7))
+    io.immB := Cat(
       Fill(19, io.instruction(31)),
       io.instruction(31),
       io.instruction(7),
@@ -22,8 +23,8 @@ class ImmGenerator {
       io.instruction(11, 8),
       0.U
     )
-    io.immU = Cat(io.instruction(31, 12), Fill(12, 0.U))
-    io.immJ = Cat(
+    io.immU := Cat(io.instruction(31, 12), Fill(12, 0.U))
+    io.immJ := Cat(
       Fill(11, io.instruction(31)),
       io.instruction(19, 12),
       io.instruction(20),

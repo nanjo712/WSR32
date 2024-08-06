@@ -2,7 +2,7 @@ package WSR32
 
 import chisel3._
 
-class RegisterFile {
+class RegisterFile extends Module {
     val io = IO(new Bundle {
         val readAddr1   = Input(UInt(5.W))
         val readAddr2   = Input(UInt(5.W))

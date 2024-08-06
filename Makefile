@@ -1,6 +1,6 @@
-BUILD_DIR = ./build
+BUILD_DIR = ./generated
 
-PRJ = playground
+PRJ = WSR32
 
 test:
 	mill -i $(PRJ).test
