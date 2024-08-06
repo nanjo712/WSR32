@@ -12,4 +12,5 @@ class ALU {
 
     // only add currently
     io.result := a + b
+    // TODO: implement other operations
 }
