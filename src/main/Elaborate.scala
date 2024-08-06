@@ -5,8 +5,8 @@ object Elaborate extends App {
       "disallowPackedArrays",
       "locationInfoStyle=wrapInAtSquareBracket"
     ).mkString(","),
-    "-disable-all-randomization",
-    "-strip-debug-info"
+    "-disable-all-randomization"
+    // "-strip-debug-info"
   )
   circt.stage.ChiselStage.emitSystemVerilogFile(new gcd.GCD(), args, firtoolOptions)
 }
