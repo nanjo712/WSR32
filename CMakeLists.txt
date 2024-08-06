@@ -8,18 +8,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(EXPORT_COMPILE_COMMANDS ON)
 
-find_package(verilator HINTS $ENV{VERILATOR_ROOT})
+set(ELABORATE_SOURCE src/main/scala/Elaborate.scala)
 
 set(CHISEL_SOURCE
-    src/main/ALU.scala 
-    src/main/Core.scala 
-    src/main/Elaborate.scala
-    src/main/EXU.scala 
-    src/main/IDU.scala 
-    src/main/IFU.scala 
-    src/main/ImmGenerator.scala 
-    src/main/PCRegister.scala 
-    src/main/RegisterFile.scala
+    src/main/scala/ALU.scala 
+    src/main/scala/Core.scala 
+    src/main/scala/EXU.scala 
+    src/main/scala/IDU.scala 
+    src/main/scala/IFU.scala 
+    src/main/scala/ImmGenerator.scala 
+    src/main/scala/PCRegister.scala 
+    src/main/scala/RegisterFile.scala
 )
 
 set(MILL_VERSION "--mill-version" "0.11.11")
@@ -32,19 +31,23 @@ set(FIRRTL_ARG
 
 add_custom_target(elaborate 
     COMMAND mkdir -p ${VERILOG_SRC_DIR}
-    COMMAND mill -i ${MILL_VERSION} WSR32.runMain Elaborate ${FIRRTL_ARG}
-    DEPENDS ${CHISEL_SOURCE}
+    COMMAND mill ${MILL_VERSION} -i ${PROJECT_NAME}.runMain Elaborate ${FIRRTL_ARG}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    SOURCES ${CHISEL_SOURCE} ${ELABORATE_SOURCE}
 )
+
 
 foreach(FILE ${CHISEL_SOURCE})
     get_filename_component(FILE_NAME ${FILE} NAME_WE)
-    list(APPEND VERILOG_SOURCE ${VERILOG_SRC_DIR}/${FILE_NAME}.v)    
+    list(APPEND VERILOG_SOURCE ${VERILOG_SRC_DIR}/${FILE_NAME}.sv)    
 endforeach()
 
 set(VERILATOR_ARG
-    -Wall 
+    --top-module Core
     --trace
-    -j8
+    -j 8
 )
-
-
+add_custom_target(simulate ALL
+    COMMAND verilator ${VERILATOR_ARG} ${VERILOG_SOURCE} --cc -o ${PROJECT_NAME}
+    DEPENDS elaborate
+)

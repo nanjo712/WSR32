@@ -21,7 +21,7 @@ object WSR32 extends SbtModule with ScalafmtModule { m =>
     )
 
     override def sources = T.sources {
-        super.sources() ++ Seq(PathRef(millSourcePath / "main"))
+        super.sources() ++ Seq(PathRef(millSourcePath / "main" / "scala"))
     }
     override def ivyDeps = Agg(
       if (useChisel3) ivy"edu.berkeley.cs::chisel3:3.6.0"
@@ -43,7 +43,8 @@ object WSR32 extends SbtModule with ScalafmtModule { m =>
     //     ivy"edu.berkeley.cs::chiseltest:6.0.0"
     //   )
     // }
-    def repositoriesTask             = T.task {
+
+    def repositoriesTask = T.task {
         Seq(
           coursier.MavenRepository("https://repo.scala-sbt.org/scalasbt/maven-releases"),
           coursier.MavenRepository("https://oss.sonatype.org/content/repositories/releases"),
