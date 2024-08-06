@@ -8,7 +8,7 @@ test:
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
-	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
+	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR) --full-stacktrace --split-verilog
 
 help:
 	mill -i $(PRJ).runMain Elaborate --help
