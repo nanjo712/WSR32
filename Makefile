@@ -1,4 +1,4 @@
-BUILD_DIR = ./generated
+BUILD_DIR = ./build/generated
 
 PRJ = WSR32
 

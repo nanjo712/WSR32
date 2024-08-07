@@ -3,10 +3,19 @@
 #include <memory>
 
 #include "VCore.h"
+#include "VCore__Dpi.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 
 uint32_t counter = 0;
+
+bool is_stop = false;
+
+void ebreak_handler()
+{
+    is_stop = true;
+    std::cout << "Hit ebreak instruction" << std::endl;
+}
 
 void tick(VCore& top, VerilatedVcdC& trace)
 {
@@ -19,11 +28,7 @@ void tick(VCore& top, VerilatedVcdC& trace)
     trace.dump(counter++);
 }
 
-uint32_t memory[3] = {
-    0x02a00093,
-    0x00100113,
-    0xfd400193,
-};
+constexpr uint32_t memory[] = {0x02a00093, 0x00100113, 0xfd400193, 0x00100073};
 
 int main(int argc, char** argv)
 {
@@ -44,12 +49,15 @@ int main(int argc, char** argv)
 
     top->reset = 0;
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; !is_stop; i++)
     {
+        assert(i < sizeof(memory) / sizeof(memory[0]));
         top->io_instruction = memory[i];
-        printf("instruction: %32b\n", memory[i]);
+        std::cout << "Instruction: " << memory[i] << std::endl;
         tick(*top, *trace);
     }
+
+    std::cout << "Simulation complete" << std::endl;
 
     top->io_regReadValid = 1;
     top->io_regReadAddr = 1;

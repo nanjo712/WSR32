@@ -21,6 +21,10 @@ set(CHISEL_SOURCE
     src/main/scala/ImmGenerator.scala 
     src/main/scala/PCRegister.scala 
     src/main/scala/RegisterFile.scala
+    src/main/scala/Ebreak.scala
+)
+set(EXT_VERILOG
+    src/main/resources/verilog/Ebreak.v
 )
 
 set(MILL_VERSION "--mill-version" "0.11.11")
@@ -40,17 +44,27 @@ foreach(FILE ${CHISEL_SOURCE})
         set(SCALA_SOURCE_TIMESTAMP ${FILE_TIMESTAMP})
     endif()
 endforeach()
+foreach(FILE ${EXT_VERILOG})
+    file(TIMESTAMP ${FILE} FILE_TIMESTAMP)
+    if(${FILE_TIMESTAMP} STRGREATER ${SCALA_SOURCE_TIMESTAMP})
+        set(SCALA_SOURCE_TIMESTAMP ${FILE_TIMESTAMP})
+    endif()
+endforeach()
 
 # check if the generated Verilog files are up-to-date
-file(TIMESTAMP ${VERILOG_SRC_LIST} VERILOG_SRC_TIMESTAMP)
-if(${SCALA_SOURCE_TIMESTAMP} STRGREATER ${VERILOG_SRC_TIMESTAMP})
+if (NOT EXISTS ${VERILOG_SRC_LIST})
     set(ELABORATE_OUTDATED TRUE)
     message(STATUS "Verilog Files are outdated")
 else()
-    set(ELABORATE_OUTDATED FALSE)
-    message(STATUS "Verilog Files are up-to-date")
+    file(TIMESTAMP ${VERILOG_SRC_LIST} VERILOG_SRC_TIMESTAMP)
+    if (${SCALA_SOURCE_TIMESTAMP} STRGREATER ${VERILOG_SRC_TIMESTAMP})
+        set(ELABORATE_OUTDATED TRUE)
+        message(STATUS "Verilog Files are outdated")
+    else()
+        set(ELABORATE_OUTDATED FALSE)
+        message(STATUS "Verilog Files are up-to-date")
+    endif()
 endif()
-
 # if the generated Verilog files are outdated, re-run the Elaborate command
 if (${ELABORATE_OUTDATED})
     message(STATUS "Running Elaborate command")
@@ -58,7 +72,11 @@ if (${ELABORATE_OUTDATED})
         COMMAND mkdir -p ${VERILOG_SRC_DIR}
         COMMAND mill ${MILL_VERSION} -i ${PROJECT_NAME}.runMain Elaborate ${FIRRTL_ARG}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE ELABORATE_RESULT
     )
+    if (NOT ${ELABORATE_RESULT} EQUAL 0)
+        message(FATAL_ERROR "Elaborate command failed with exit code ${ELABORATE_RESULT}")
+    endif()
 endif()
 
 add_custom_command(
@@ -73,13 +91,14 @@ add_custom_target(elaborate
     DEPENDS ${VERILOG_SRC_LIST}
 )
 
-foreach(FILE ${CHISEL_SOURCE})
-    get_filename_component(FILE_NAME ${FILE} NAME_WE)
-    list(APPEND VERILOG_SOURCE ${VERILOG_SRC_DIR}/${FILE_NAME}.sv)    
+file(STRINGS ${VERILOG_SRC_LIST} VERILOG_FILE_NAME)
+foreach(FILE ${VERILOG_FILE_NAME})
+    list(APPEND VERILOG_SOURCE ${VERILOG_SRC_DIR}/${FILE})
 endforeach()
 
+
 add_executable(core_sim
-    src/main/cpp/core_sim.cpp
+    src/main/resources/cpp/core_sim.cpp
 )
 add_dependencies(core_sim elaborate)
 verilate(core_sim
