@@ -22,9 +22,11 @@ set(CHISEL_SOURCE
     src/main/scala/PCRegister.scala 
     src/main/scala/RegisterFile.scala
     src/main/scala/Ebreak.scala
+    src/main/scala/InvInst.scala
 )
 set(EXT_VERILOG
     src/main/resources/verilog/Ebreak.v
+    src/main/resources/verilog/InvInst.v
 )
 
 set(MILL_VERSION "--mill-version" "0.11.11")

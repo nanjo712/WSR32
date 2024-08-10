@@ -18,6 +18,7 @@ class IDU extends Module {
         val writeToReg  = Output(Bool())
         val writeEnable = Output(Bool())
         val ebreak      = Output(Bool())
+        val invInst     = Output(Bool())
     })
 
     val immGenerator = Module(new ImmGenerator)
@@ -39,6 +40,7 @@ class IDU extends Module {
     io.writeEnable := false.B
     io.writeToReg  := false.B
     io.ebreak      := false.B
+    io.invInst     := false.B
     io.sourceA     := 0.U
     io.sourceB     := 0.U
 
@@ -49,5 +51,7 @@ class IDU extends Module {
         io.sourceB     := immI
     }.elsewhen(io.instruction === "b000000000001_00000_000_00000_1110011".U) {
         io.ebreak := true.B
+    }.otherwise {
+        io.invInst := true.B
     }
 }

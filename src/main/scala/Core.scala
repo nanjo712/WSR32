@@ -12,10 +12,11 @@ class Core extends Module {
         val regReadData  = Output(UInt(32.W))
     })
 
-    val ifu    = Module(new IFU)
-    val idu    = Module(new IDU)
-    val exu    = Module(new EXU)
-    val ebreak = Module(new Ebreak)
+    val ifu     = Module(new IFU)
+    val idu     = Module(new IDU)
+    val exu     = Module(new EXU)
+    val ebreak  = Module(new Ebreak)
+    val invInst = Module(new InvInst)
 
     val registerFile = Module(new RegisterFile)
 
@@ -38,4 +39,9 @@ class Core extends Module {
 
     ebreak.io.ebreak := idu.io.ebreak
     ebreak.io.clock  := clock
+    ebreak.io.reset  := reset
+
+    invInst.io.invInst := idu.io.invInst
+    invInst.io.clock   := clock
+    invInst.io.reset   := reset
 }

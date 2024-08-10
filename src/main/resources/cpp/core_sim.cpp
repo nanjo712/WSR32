@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <memory>
 
@@ -8,14 +9,24 @@
 #include "verilated_vcd_c.h"
 
 uint32_t counter = 0;
+std::vector<uint32_t> memory = {0x02a00093, 0x00100113, 0xfd400193, 0x00100073};
 
-bool is_stop = false;
-
-void ebreak_handler()
+enum CORE_STATUS
 {
-    is_stop = true;
-    std::cout << "Hit ebreak instruction" << std::endl;
+    STATUS_OK,
+    STATUS_ERROR,
+    STATUS_STOP
+};
+
+CORE_STATUS status = STATUS_OK;
+
+void invalid_instruction_handler()
+{
+    status = STATUS_ERROR;
+    std::cout << "Invalid instruction" << std::endl;
 }
+
+void ebreak_handler() { status = STATUS_STOP; }
 
 void tick(VCore& top, VerilatedVcdC& trace)
 {
@@ -28,10 +39,34 @@ void tick(VCore& top, VerilatedVcdC& trace)
     trace.dump(counter++);
 }
 
-constexpr uint32_t memory[] = {0x02a00093, 0x00100113, 0xfd400193, 0x00100073};
+bool load_img(const std::string& filename)
+{
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return false;
+    }
+
+    file.seekg(0, std::ios::end);
+    auto size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    memory.resize(size / 4 + 1);
+    file.read(reinterpret_cast<char*>(memory.data()), size);
+    file.close();
+    return true;
+}
 
 int main(int argc, char** argv)
 {
+    if (argc < 2 || !load_img(argv[1]))
+    {
+        std::cout << "Using default image" << std::endl;
+    }
+    else
+    {
+        std::cout << "Using image: " << argv[1] << std::endl;
+    }
     auto context = std::make_unique<VerilatedContext>();
     context->commandArgs(argc, argv);
     context->traceEverOn(true);
@@ -49,33 +84,23 @@ int main(int argc, char** argv)
 
     top->reset = 0;
 
-    for (int i = 0; !is_stop; i++)
+    for (int i = 0; status == STATUS_OK; i++)
     {
         assert(i < sizeof(memory) / sizeof(memory[0]));
         top->io_instruction = memory[i];
-        std::cout << "Instruction: " << memory[i] << std::endl;
         tick(*top, *trace);
     }
 
-    std::cout << "Simulation complete" << std::endl;
+    if (status == STATUS_ERROR)
+    {
+        std::cout << "Hit BAD Trap" << std::endl;
+    }
+    else
+    {
+        std::cout << "Hit Ebreak" << std::endl;
+    }
 
-    top->io_regReadValid = 1;
-    top->io_regReadAddr = 1;
-    top->eval();
-    auto x1 = top->io_regReadData;
-
-    top->io_regReadAddr = 2;
-    top->eval();
-    auto x2 = top->io_regReadData;
-
-    top->io_regReadAddr = 3;
-    top->eval();
-    auto x3 = top->io_regReadData;
-
-    std::cout << "x1: " << x1 << std::endl;
-    std::cout << "x2: " << x2 << std::endl;
-    std::cout << "x3: " << (int)x3 << std::endl;
-    top->final();
-    trace->close();
-    return 0;
+    std::cout << "Simulation stop" << std::endl;
+    std::cout << "Core Status: " << status << std::endl;
+    return !(status == STATUS_STOP);
 }
