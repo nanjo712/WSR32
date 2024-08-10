@@ -1,8 +1,11 @@
+#include <fmt/core.h>
+
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <memory>
 
+#include "Utils/Disasm.h"
 #include "VCore.h"
 #include "VCore__Dpi.h"
 #include "verilated.h"
@@ -67,6 +70,7 @@ int main(int argc, char** argv)
     {
         std::cout << "Using image: " << argv[1] << std::endl;
     }
+    init_disasm("riscv32-linux-gnu");
     auto context = std::make_unique<VerilatedContext>();
     context->commandArgs(argc, argv);
     context->traceEverOn(true);
@@ -94,6 +98,11 @@ int main(int argc, char** argv)
     if (status == STATUS_ERROR)
     {
         std::cout << "Hit BAD Trap" << std::endl;
+        std::cout << fmt::format("Current instruction: {:08x}",
+                                 top->io_instruction)
+                  << std::endl;
+        auto inst = disassemble(top->io_pc, (uint8_t*)&top->io_instruction, 4);
+        std::cout << fmt::format("Disassembled: {}", inst) << std::endl;
     }
     else
     {

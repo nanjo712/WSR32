@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.29)
 project(WSR32)
 
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
+find_package(fmt REQUIRED)
+find_package(LLVM REQUIRED CONFIG)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -101,7 +103,10 @@ endforeach()
 
 add_executable(core_sim
     src/main/resources/cpp/core_sim.cpp
+    src/main/resources/cpp/Disasm.cpp
 )
+target_link_libraries(core_sim PRIVATE fmt::fmt LLVM)
+target_include_directories(core_sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_dependencies(core_sim elaborate)
 verilate(core_sim
     PREFIX VCore
