@@ -19,6 +19,7 @@ class Core extends Module {
     val invInst = Module(new InvInst)
 
     val registerFile = Module(new RegisterFile)
+    val mem          = Module(new Memory)
 
     io.pc              := ifu.io.pc
     idu.io.instruction := io.instruction
@@ -35,7 +36,7 @@ class Core extends Module {
 
     exu.io.a     := idu.io.sourceA
     exu.io.b     := idu.io.sourceB
-    exu.io.aluOp := 0.U
+    exu.io.aluOp := idu.io.aluOp
 
     ebreak.io.ebreak := idu.io.ebreak
     ebreak.io.clock  := clock

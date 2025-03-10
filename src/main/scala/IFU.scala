@@ -4,10 +4,13 @@ import chisel3._
 
 class IFU extends Module {
     val io = IO(new Bundle {
-        val pc = Output(UInt(32.W))
+        val pc          = Input(UInt(32.W))
+        val instruction = Output(UInt(32.W))
     })
 
-    val pcRegister = Module(new PCRegister)
+    val memInterface = IO(Flipped(new MemoryInterface))
 
-    io.pc := pcRegister.io.readData
+    memInterface.addr := io.pc
+    memInterface.read := true.B
+    io.instruction    := memInterface.dataOut
 }

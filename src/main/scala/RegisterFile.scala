@@ -19,7 +19,6 @@ class RegisterFile extends Module {
     io.readData2 := registers(io.readAddr2)
 
     registers(io.writeAddr) := Mux(io.writeEnable, io.writeData, registers(io.writeAddr))
-
     // R0 is hardwired to 0
-    registers(0) := 0.U
+    registers(0)            := 0.U
 }
